@@ -1,0 +1,114 @@
+version: "3.5"
+
+# Abstract App Configuration
+#
+# This sets up our minimal configuration used for building
+# the main Dockerfile (Dockerfile.development). This is where
+# you control the versions of things like ruby, node, etc.
+#
+# You also control the image version. If you make a change to any
+# of the Dockerfiles, or you make any changes that you want to trigger
+# a new build of everything with on next run, change the image version
+x-app: &app
+  build:
+    context: .
+    dockerfile: ./docker/Dockerfile.development
+    args:
+      RUBY_VERSION: "2.6.3-slim"
+      PG_MAGOR: "11"
+      NODE_MAJOR: "10"
+      YARN_VERSION: "1.17.3"
+      BUNDLER_VERSION: "2.0.2"
+      RUBYGEMS_VERSION: "3.0.4"
+  image: cookbook-dev:1.0.0
+  tmpfs:
+    - /tmp
+
+# Abstract Backend Service Configuration
+#
+# This is all the common configuration for our rails app
+# and any associated services.
+x-backend: &backend
+  <<: *app
+  depends_on:
+    - memcached
+    - postgres
+  environment:
+    VIRTUAL_HOST: cookbook.docker
+    NODE_ENV: development
+    RAILS_ENV: ${RAILS_ENV:-development}
+    BOOTSNAP_CACHE_DIR: /gems/bootsnap
+    WEBPACKER_DEV_SERVER_HOST: webpacker
+    WEB_CONCURRENCY: 1
+    HISTFILE: /usr/src/app/log/.bash_history
+    PSQL_HISTFILE: /usr/src/app/log/.psql_history
+    EDITOR: vi
+    DATABASE_URL: postgres://postgres:postgres@postgres:5432
+  env_file:
+    - "${ENV_FILE_NAME:-.env.docker.development}"
+  stdin_open: true
+  tty: true
+  volumes:
+    - .:/usr/src/app:cached
+    - rails_cache:/usr/src/app/tmp/cache
+    - gem_cache:/gems
+    - node_modules:/usr/src/app/node_modules
+    - packs:/usr/src/app/public/packs
+    - ./docker/.psqlrc:/root/.psqlrc:ro
+
+services:
+  # Rails Server
+  #
+  # This service can also be used to run various commands.
+  # For example:
+  #   docker-compose run --rm rails bundle install
+  #   docker-compose run --rm rails bin/rails db:create db:migrate
+  #   docker-compose run --rm rails yarn
+  rails:
+    <<: *backend
+    command: bundle exec rails s -b 0.0.0.0
+    depends_on:
+      - webpacker
+    ports:
+      - "3000:3000"
+  webpacker:
+    <<: *backend
+    command: bin/webpack-dev-server
+    environment:
+      WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+    ports:
+      - "3035:3035"
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.nginx.development
+    depends_on:
+      - rails
+      - webpacker
+    image: cookbook-dev-nginx:1.0.1
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./public:/usr/src/app/public
+      - ./docker/ssl:/etc/ssl
+  postgres:
+    image: postgres:11.4
+    volumes:
+      - .psqlrc:/root/.psqlrc:ro
+      - postgres:/var/lib/postgresql/data
+      - ./log:/root/log:cached
+    environment:
+      - PSQL_HISTFILE=/root/log/.psql_history
+    ports:
+      - 5432
+  memcached:
+    image: memcached:1.5.16
+    ports:
+      - 11211
+volumes:
+  postgres:
+  gem_cache:
+  node_modules:
+  rails_cache:
+  packs:

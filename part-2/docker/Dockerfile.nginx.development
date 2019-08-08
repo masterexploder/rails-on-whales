@@ -1,0 +1,29 @@
+# Development file for Nginx Proxy for Rails / Webpack
+#
+# This would NOT be used for production, but this does enable:
+#   * Rails behind an nginx proxy w/ SSL support
+#   * Webapck behind the same proxy w/ SSL support
+#
+FROM nginx
+
+RUN apt-get update -qq && apt-get -y install apache2-utils
+
+# define where nginx will look for "public" files
+# This path should be mounted as a volume in the docker-compose file
+ENV RAILS_ROOT /var/www/app
+
+WORKDIR $RAILS_ROOT
+
+RUN mkdir log
+
+# Copy the config to the container
+COPY docker/nginx/nginx.development.conf /tmp/docker.nginx
+# Replace paths appropriately
+RUN envsubst '$RAILS_ROOT' < /tmp/docker.nginx > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+EXPOSE 443
+
+# Don't run daemonized, as we want nginx to come down when we SIGTERM
+# (e.g. docker-compose down)
+CMD [ "nginx", "-g", "daemon off;" ]
