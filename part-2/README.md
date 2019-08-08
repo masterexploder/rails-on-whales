@@ -1,7 +1,7 @@
 # Part 2 Reference Files
 
 All the files in this folder are in the state that they should be upon
-successfully completing all the steps described in Part 2 of the series.
+successfully completing all the steps described in [Part 2](https://ianselby.me/rails-on-whales/rails-and-docker-for-development) of the series.
 
 ## File & Folder Reference
 

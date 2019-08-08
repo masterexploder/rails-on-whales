@@ -8,9 +8,9 @@ You can read all about it here: [https://ianselby.me/rails-on-whales](https://ia
 
 ## File & Folder Reference
 
-| Name     | Description                                                                                                                                      |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `part-2` | All the files created in their final form after all steps described in [part 2 of the series](rails-on-whales/rails-and-docker-for-development). |
+| Name     | Description                                                                                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `part-2` | All the files created in their final form after all steps described in [part 2 of the series](https://ianselby.me/rails-on-whales/rails-and-docker-for-development). |
 
 # License & Attribution
 
