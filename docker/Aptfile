@@ -1,0 +1,8 @@
+# Add any packages that can be installed via apt-get install
+# to this file, one per line, that your particular application
+# may need to run properly
+#
+# For example, if your app does image manipulation, you could add
+# graphicsmagick simply by adding the following:
+
+# graphicsmagick

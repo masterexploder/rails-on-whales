@@ -1,3 +1,6 @@
+# Make sure you substitue all instances of <project_name> with an actual value
+# Also uncomment / add additional services as needed.
+
 version: "3.5"
 
 # Abstract App Configuration
@@ -20,7 +23,7 @@ x-app: &app
       YARN_VERSION: "1.17.3"
       BUNDLER_VERSION: "2.0.2"
       RUBYGEMS_VERSION: "3.0.4"
-  image: cookbook-dev:1.0.0
+  image: <project_name>-dev:1.0.0
   tmpfs:
     - /tmp
 
@@ -34,7 +37,6 @@ x-backend: &backend
     - memcached
     - postgres
   environment:
-    VIRTUAL_HOST: cookbook.docker
     NODE_ENV: development
     RAILS_ENV: ${RAILS_ENV:-development}
     BOOTSNAP_CACHE_DIR: /gems/bootsnap
@@ -71,6 +73,7 @@ services:
       - webpacker
     ports:
       - "3000:3000"
+  # Webpacker Service
   webpacker:
     <<: *backend
     command: bin/webpack-dev-server
@@ -78,6 +81,7 @@ services:
       WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
     ports:
       - "3035:3035"
+  # Nginx Proxy for Rails and Webpacker
   nginx:
     build:
       context: .
@@ -85,13 +89,19 @@ services:
     depends_on:
       - rails
       - webpacker
-    image: cookbook-dev-nginx:1.0.1
+    environment:
+      # e.g. myapp.docker
+      # Make sure you generate SSL certificates that match this
+      # host name. Also make sure this matches the
+      DEVELOPMENT_HOST_NAME: <project_name>.docker
+    image: <project_name>-dev-nginx:1.0.0
     ports:
       - 80:80
       - 443:443
     volumes:
       - ./public:/usr/src/app/public
       - ./docker/ssl:/etc/ssl
+  # PostgreSQL DB
   postgres:
     image: postgres:11.4
     volumes:
@@ -102,10 +112,6 @@ services:
       - PSQL_HISTFILE=/root/log/.psql_history
     ports:
       - 5432
-  memcached:
-    image: memcached:1.5.16
-    ports:
-      - 11211
 volumes:
   postgres:
   gem_cache:
