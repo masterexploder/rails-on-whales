@@ -34,7 +34,6 @@ x-app: &app
 x-backend: &backend
   <<: *app
   depends_on:
-    - memcached
     - postgres
   environment:
     NODE_ENV: development
