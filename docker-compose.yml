@@ -83,16 +83,16 @@ services:
   # Nginx Proxy for Rails and Webpacker
   nginx:
     build:
+      args:
+        # e.g. myapp.docker
+        # Make sure you generate SSL certificates that match this
+        # host name. Also make sure this matches the
+        DEVELOPMENT_HOST_NAME: <project_name>.docker
       context: .
       dockerfile: ./docker/Dockerfile.nginx.development
     depends_on:
       - rails
       - webpacker
-    environment:
-      # e.g. myapp.docker
-      # Make sure you generate SSL certificates that match this
-      # host name. Also make sure this matches the
-      DEVELOPMENT_HOST_NAME: <project_name>.docker
     image: <project_name>-dev-nginx:1.0.0
     ports:
       - 80:80
